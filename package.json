@@ -10,8 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.0.0",
-    "lit": "^3.3.0",
-    "lamejs": "^1.2.1"
+    "lit": "^3.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

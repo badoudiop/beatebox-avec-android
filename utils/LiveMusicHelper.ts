@@ -6,7 +6,6 @@ import type { PlaybackState, Prompt } from '../types';
 import type { AudioChunk, GoogleGenAI, LiveMusicFilteredPrompt, LiveMusicServerMessage, LiveMusicSession } from '@google/genai';
 import { decode, decodeAudioData } from './audio';
 import { throttle } from './throttle';
-import { Mp3Encoder } from 'lamejs';
 
 export class LiveMusicHelper extends EventTarget {
 
@@ -31,9 +30,9 @@ export class LiveMusicHelper extends EventTarget {
   private prompts: Map<string, Prompt>;
 
   private isRecording = false;
-  private mp3Encoder: Mp3Encoder | null = null;
-  private scriptProcessor: ScriptProcessorNode | null = null;
-  private recordedMp3Chunks: Int8Array[] = [];
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordedChunks: Blob[] = [];
+  private mediaStreamDestination: MediaStreamAudioDestinationNode | null = null;
 
 
   constructor(ai: GoogleGenAI, model: string) {
@@ -208,64 +207,52 @@ export class LiveMusicHelper extends EventTarget {
       return;
     }
     this.isRecording = true;
-    this.recordedMp3Chunks = [];
-    this.mp3Encoder = new Mp3Encoder(2, this.audioContext.sampleRate, 128);
+    this.recordedChunks = [];
     
-    const bufferSize = 4096;
-    this.scriptProcessor = this.audioContext.createScriptProcessor(bufferSize, 2, 2);
+    this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
+    this.outputNode.connect(this.mediaStreamDestination);
 
-    this.scriptProcessor.onaudioprocess = (e: AudioProcessingEvent) => {
-        if (!this.isRecording || !this.mp3Encoder) return;
+    const options = { mimeType: 'audio/webm' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        this.dispatchEvent(new CustomEvent('error', { detail: 'WebM recording is not supported in this browser.' }));
+        this.isRecording = false;
+        return;
+    }
+    
+    this.mediaRecorder = new MediaRecorder(this.mediaStreamDestination.stream, options);
 
-        const left = e.inputBuffer.getChannelData(0);
-        const right = e.inputBuffer.getChannelData(1);
-
-        const leftInt16 = new Int16Array(left.length);
-        const rightInt16 = new Int16Array(right.length);
-
-        for (let i = 0; i < left.length; i++) {
-            leftInt16[i] = left[i] * 32767;
-            rightInt16[i] = right[i] * 32767;
-        }
-        
-        const mp3buf = this.mp3Encoder.encodeBuffer(leftInt16, rightInt16);
-        if (mp3buf.length > 0) {
-            this.recordedMp3Chunks.push(mp3buf);
+    this.mediaRecorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data.size > 0) {
+            this.recordedChunks.push(e.data);
         }
     };
 
-    this.outputNode.connect(this.scriptProcessor);
-    this.scriptProcessor.connect(this.audioContext.destination);
+    this.mediaRecorder.onstop = () => {
+        const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `prompt-dj-${new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-')}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        if (this.mediaStreamDestination) {
+            this.outputNode.disconnect(this.mediaStreamDestination);
+            this.mediaStreamDestination = null;
+        }
+    };
+
+    this.mediaRecorder.start();
     this.dispatchEvent(new CustomEvent('recording-state-changed', { detail: this.isRecording }));
   }
 
   private stopRecording() {
-    if (!this.isRecording) return;
+    if (!this.isRecording || !this.mediaRecorder) return;
     
     this.isRecording = false;
-
-    if (this.scriptProcessor) {
-        this.scriptProcessor.disconnect();
-        this.scriptProcessor = null;
-    }
-    if (this.mp3Encoder) {
-        const mp3buf = this.mp3Encoder.flush();
-        if (mp3buf.length > 0) {
-            this.recordedMp3Chunks.push(mp3buf);
-        }
-        this.mp3Encoder = null;
-    }
-
-    const blob = new Blob(this.recordedMp3Chunks, { type: 'audio/mpeg' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = `prompt-dj-${new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-')}.mp3`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
+    this.mediaRecorder.stop();
     this.dispatchEvent(new CustomEvent('recording-state-changed', { detail: this.isRecording }));
   }
 }

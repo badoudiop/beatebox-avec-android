@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Control real time music with a MIDI controller
  * @license
@@ -122,7 +123,7 @@ const DEFAULT_PROMPTS = [
   { color: '#d9b2ff', text: 'Staccato Rhythms at 60 bpm' },
   { color: '#3dffab', text: 'Punchy Kick at 60 bpm' },
   { color: '#ffdd28', text: 'Dubstep at 60 bpm' },
-  { color: '#A0522D', text: 'Balafon at 60 bpm' },
+  { color: '#A0522D', text: 'Balafon rhythm at 60 bpm' },
   { color: '#d8ff3e', text: 'Neo Soul at 60 bpm' },
   { color: '#E2725B', text: 'Kora rhythm at 60 bpm' },
   { color: '#ff6600', text: 'Mbalakh rhythm at 60 bpm' },
