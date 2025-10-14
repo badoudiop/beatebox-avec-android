@@ -128,9 +128,11 @@ export class PromptDjMidi extends LitElement {
     newPrompts.set(promptId, prompt);
 
     this.prompts = newPrompts;
-    this.requestUpdate();
+    // FIX: Cast to LitElement to resolve TypeScript type inference issue with requestUpdate.
+    (this as LitElement).requestUpdate();
 
-    this.dispatchEvent(
+    // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+    (this as unknown as HTMLElement).dispatchEvent(
       new CustomEvent('prompts-changed', { detail: this.prompts }),
     );
   }
@@ -177,7 +179,8 @@ export class PromptDjMidi extends LitElement {
       this.activeMidiInputId = this.midiDispatcher.activeMidiInputId;
     } catch (e: any) {
       this.showMidi = false;
-      this.dispatchEvent(new CustomEvent('error', {detail: e.message}));
+      // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+      (this as unknown as HTMLElement).dispatchEvent(new CustomEvent('error', {detail: e.message}));
     }
   }
 
@@ -189,11 +192,13 @@ export class PromptDjMidi extends LitElement {
   }
 
   private playPause() {
-    this.dispatchEvent(new CustomEvent('play-pause'));
+    // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+    (this as unknown as HTMLElement).dispatchEvent(new CustomEvent('play-pause'));
   }
 
   private toggleRecord() {
-    this.dispatchEvent(new CustomEvent('record-toggle'));
+    // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+    (this as unknown as HTMLElement).dispatchEvent(new CustomEvent('record-toggle'));
   }
 
   public addFilteredPrompt(prompt: string) {

@@ -149,7 +149,8 @@ export class PromptController extends LitElement {
   }
 
   private dispatchPromptChange() {
-    this.dispatchEvent(
+    // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+    (this as unknown as HTMLElement).dispatchEvent(
       new CustomEvent<Prompt>('prompt-changed', {
         detail: {
           promptId: this.promptId,

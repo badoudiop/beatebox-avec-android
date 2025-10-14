@@ -18,10 +18,12 @@ function main() {
   const initialPrompts = buildInitialPrompts();
 
   const pdjMidi = new PromptDjMidi(initialPrompts);
-  document.body.appendChild(pdjMidi);
+  // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+  document.body.appendChild(pdjMidi as unknown as HTMLElement);
 
   const toastMessage = new ToastMessage();
-  document.body.appendChild(toastMessage);
+  // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+  document.body.appendChild(toastMessage as unknown as HTMLElement);
 
   const liveMusicHelper = new LiveMusicHelper(ai, model);
   liveMusicHelper.setWeightedPrompts(initialPrompts);
@@ -29,17 +31,20 @@ function main() {
   const audioAnalyser = new AudioAnalyser(liveMusicHelper.audioContext);
   liveMusicHelper.extraDestination = audioAnalyser.node;
 
-  pdjMidi.addEventListener('prompts-changed', ((e: Event) => {
+  // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+  (pdjMidi as unknown as HTMLElement).addEventListener('prompts-changed', ((e: Event) => {
     const customEvent = e as CustomEvent<Map<string, Prompt>>;
     const prompts = customEvent.detail;
     liveMusicHelper.setWeightedPrompts(prompts);
   }));
 
-  pdjMidi.addEventListener('play-pause', () => {
+  // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+  (pdjMidi as unknown as HTMLElement).addEventListener('play-pause', () => {
     liveMusicHelper.playPause();
   });
 
-  pdjMidi.addEventListener('record-toggle', () => {
+  // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+  (pdjMidi as unknown as HTMLElement).addEventListener('record-toggle', () => {
     liveMusicHelper.toggleRecording();
   });
 
@@ -69,7 +74,8 @@ function main() {
   });
 
   liveMusicHelper.addEventListener('error', errorToast);
-  pdjMidi.addEventListener('error', errorToast);
+  // FIX: Cast to unknown first to satisfy TypeScript's type overlap requirement for custom elements.
+  (pdjMidi as unknown as HTMLElement).addEventListener('error', errorToast);
 
   audioAnalyser.addEventListener('audio-level-changed', ((e: Event) => {
     const customEvent = e as CustomEvent<number>;
@@ -104,20 +110,20 @@ function buildInitialPrompts() {
 }
 
 const DEFAULT_PROMPTS = [
-  { color: '#9900ff', text: 'Bossa Nova' },
-  { color: '#5200ff', text: 'Chillwave' },
-  { color: '#ff25f6', text: 'Drum and Bass' },
-  { color: '#2af6de', text: 'Post Punk' },
-  { color: '#ffdd28', text: 'Shoegaze' },
-  { color: '#2af6de', text: 'Funk' },
-  { color: '#9900ff', text: 'Chiptune' },
-  { color: '#3dffab', text: 'Lush Strings' },
-  { color: '#d8ff3e', text: 'Sparkling Arpeggios' },
-  { color: '#d9b2ff', text: 'Staccato Rhythms' },
-  { color: '#3dffab', text: 'Punchy Kick' },
-  { color: '#ffdd28', text: 'Dubstep' },
-  { color: '#ff25f6', text: 'K Pop' },
-  { color: '#d8ff3e', text: 'Neo Soul' },
+  { color: '#9900ff', text: 'Bossa Nova at 60 bpm' },
+  { color: '#5200ff', text: 'Chillwave at 60 bpm' },
+  { color: '#ff25f6', text: 'Drum and Bass at 60 bpm' },
+  { color: '#2af6de', text: 'Post Punk at 60 bpm' },
+  { color: '#FFA500', text: 'Afrobeat rhythm at 60 bpm' },
+  { color: '#2af6de', text: 'Funk at 60 bpm' },
+  { color: '#9900ff', text: 'Chiptune at 60 bpm' },
+  { color: '#3dffab', text: 'Lush Strings at 60 bpm' },
+  { color: '#d8ff3e', text: 'Sparkling Arpeggios at 60 bpm' },
+  { color: '#d9b2ff', text: 'Staccato Rhythms at 60 bpm' },
+  { color: '#3dffab', text: 'Punchy Kick at 60 bpm' },
+  { color: '#ffdd28', text: 'Dubstep at 60 bpm' },
+  { color: '#A0522D', text: 'Balafon at 60 bpm' },
+  { color: '#d8ff3e', text: 'Neo Soul at 60 bpm' },
   { color: '#E2725B', text: 'Kora rhythm at 60 bpm' },
   { color: '#ff6600', text: 'Mbalakh rhythm at 60 bpm' },
 ];
